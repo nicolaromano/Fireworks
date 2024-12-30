@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-# Create an array of colors to use with tput
-
 colors=(
+    "$(tput setaf 5)" # purple
+    "$(tput setaf 15)" # white
     "$(tput setaf 33)" # blue
+    "$(tput setaf 40)" # green
     "$(tput setaf 190)" # yellow
     "$(tput setaf 196)" # red
-    "$(tput setaf 255)" # white
+    "$(tput setaf 219)" # orange
 )
 
 ncolors=${#colors[@]}
@@ -30,7 +31,12 @@ while true; do
     ypos=$((RANDOM % nrows))
     firework_color=${colors[$RANDOM % ncolors]}
 
-    nframes=$((RANDOM % 5 + 5)) # between 5 and 9 frames
+    nframes=$((RANDOM % 5 + 5)) # between 4 and 9 frames
+
+    tput bold    
+    tput cup 1 $((ncols / 2 - 7))    
+    echo -n "${firework_color}Happy New Year!"
+    tput sgr0
 
     # ypos can't be less than nframes or more than nrows - nframes
     ypos=$((ypos < nframes ? nframes : ypos))
@@ -40,39 +46,36 @@ while true; do
     xpos=$((xpos > ncols - nframes ? ncols - nframes : xpos))
 
     # Draw the firework
-    for j in $(seq 1 5); do
-        tput cup $((ypos + 5 - j)) $xpos
+    # The firework's tail
+    for j in $(seq 1 $nframes); do
+        tput cup $((ypos + nframes - j)) $xpos
         echo -n "${firework_color}ǁ"
         sleep 0.1
     done
     tput cup $ypos $xpos
+    # The firework's head
     echo -n "${firework_color}*"        
 
-    for j in $(seq 1 5); do
-        tput cup $((ypos + 6 - j)) $xpos
-        echo -n "${firework_color} "
+    # Draw the firework explosion
+    for frame in $(seq 1 $nframes); do
+        tput cup $((ypos - frame)) $((xpos - frame))            
+        echo -n "${firework_color}\\"
+        tput cup $((ypos - frame)) $((xpos + frame))
+        echo -n "${firework_color}/"
+        tput cup $((ypos + frame)) $((xpos - frame))
+        echo -n "${firework_color}/"
+        tput cup $((ypos + frame)) $((xpos + frame))
+        echo -n "${firework_color}\\"
+        tput cup $ypos $((xpos - frame))
+        echo -n "${firework_color}-"
+        tput cup $ypos $((xpos + frame))
+        echo -n "${firework_color}-"
+        # Remove the firework tail
+        tput cup $((ypos + nframes - frame)) $xpos
+        echo -n " "
+        sleep 0.1
     done
 
-    for frame in $(seq 1 $nframes); do
-        for i in $(seq 1 $frame); do
-            tput cup $((ypos - i)) $((xpos - i))            
-            echo -n "${firework_color}\\"
-            tput cup $((ypos - i)) $((xpos + i))
-            echo -n "${firework_color}/"
-            tput cup $((ypos + i)) $((xpos - i))
-            echo -n "${firework_color}/"
-            tput cup $((ypos + i)) $((xpos + i))
-            echo -n "${firework_color}\\"
-            tput cup $ypos $((xpos - i))
-            echo -n "${firework_color}-"
-            tput cup $ypos $((xpos + i))
-            echo -n "${firework_color}-"
-            sleep 0.06
-        done
     # Clear the screen
-    done
     tput clear
 done
-
-
-EOF
